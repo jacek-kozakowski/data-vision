@@ -1,0 +1,17 @@
+backend-java/target/
+backend-java/build/
+
+ml-service/venv/
+ml-service/__pycache__/
+ml-service/*.pyc
+
+
+.idea/
+.vscode/
+*.log
+.DS_Store
+
+.env
+ml-service/.env
+backend-java/.env
+frontend/.env

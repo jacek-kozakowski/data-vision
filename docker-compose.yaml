@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_DB: datavision
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - datavision-network
+
+  ml-service:
+    build: ./ml-service
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - datavision-network
+
+  backend-java:
+    build: ./backend-java
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - ml-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/datavision
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - datavision-network
+
+volumes:
+  db-data:
+
+networks:
+  datavision-network:
+    driver: bridge
