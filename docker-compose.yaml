@@ -21,6 +21,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/datavision
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - db
       - minio-init
@@ -32,6 +33,11 @@ services:
     build: ./ml-service
     ports:
       - "8000:8000"
+    environment:
+      - MINIO_URL=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=admin12345
+      - MINIO_BUCKET_NAME=datavision-data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -57,10 +63,18 @@ services:
       - datavision-network
 
   minio-init:
-    image: busybox
-    command: sh -c "chmod +x /minio-setup.sh && /minio-setup.sh"
-    volumes:
-      - ./minio-setup.sh:/minio-setup.sh
+    image: minio/mc
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO...';
+      until /usr/bin/mc alias set local http://minio:9000 admin admin12345; do
+        sleep 1;
+      done;
+      echo 'MinIO is up. Creating bucket...';
+      /usr/bin/mc mb local/datavision-data --ignore-existing;
+      /usr/bin/mc anonymous set public local/datavision-data;
+      echo 'Bucket and policy set successfully.';
+      "
     depends_on:
       - minio
     networks:

@@ -2,6 +2,7 @@ package com.datavision.backend.minio.service;
 
 import com.datavision.backend.common.exceptions.IllegalExtensionException;
 import com.datavision.backend.common.exceptions.MinioUploadException;
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.Getter;
@@ -48,4 +49,5 @@ public class MinIOService {
             throw new MinioUploadException("Failed to upload file to MinIO");
         }
     }
+
 }

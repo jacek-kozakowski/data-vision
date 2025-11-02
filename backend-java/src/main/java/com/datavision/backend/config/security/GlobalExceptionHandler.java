@@ -1,7 +1,9 @@
-package com.datavision.backend.config;
+package com.datavision.backend.config.security;
 
 import com.datavision.backend.common.exceptions.IllegalExtensionException;
 import com.datavision.backend.common.exceptions.MinioUploadException;
+import com.datavision.backend.common.exceptions.UserAlreadyExistsException;
+import com.datavision.backend.common.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -53,5 +55,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MinioUploadException.class)
     public ResponseEntity<Map<String, Object>> handleMinioUploadException(MinioUploadException ex) {
         return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, ex.getMessage());
     }
 }

@@ -11,9 +11,8 @@ ml-service/*.pyc
 *.log
 .DS_Store
 
-.env
-ml-service/.env
 backend-java/.env
+ml-service/.env
 frontend/.env
-
+.env
 GEMINI.md
