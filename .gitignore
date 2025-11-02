@@ -15,3 +15,5 @@ ml-service/*.pyc
 ml-service/.env
 backend-java/.env
 frontend/.env
+
+GEMINI.md

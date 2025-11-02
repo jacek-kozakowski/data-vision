@@ -13,6 +13,21 @@ services:
     networks:
       - datavision-network
 
+  backend-java:
+    build: ./backend-java
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/datavision
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    depends_on:
+      - db
+      - minio-init
+      - ml-service
+    networks:
+      - datavision-network
+
   ml-service:
     build: ./ml-service
     ports:
@@ -22,31 +37,38 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    depends_on:
+      - minio-init
     networks:
       - datavision-network
 
-  backend-java:
-    build: ./backend-java
+  minio:
+    image: minio/minio
     ports:
-      - "8080:8080"
-    depends_on:
-      - db
-      - ml-service
+      - "9000:9000"
+      - "9001:9001"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/datavision
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin12345
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - datavision-network
+
+  minio-init:
+    image: busybox
+    command: sh -c "chmod +x /minio-setup.sh && /minio-setup.sh"
+    volumes:
+      - ./minio-setup.sh:/minio-setup.sh
+    depends_on:
+      - minio
     networks:
       - datavision-network
 
 volumes:
   db-data:
+  minio_data:
 
 networks:
   datavision-network:
