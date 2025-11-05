@@ -1,6 +1,7 @@
 package com.datavision.backend.data.service;
 
 import com.datavision.backend.client.MLClient;
+import com.datavision.backend.common.dto.data.CleanScaleDataDto;
 import com.datavision.backend.minio.service.MinIOService;
 import com.datavision.backend.user.model.User;
 import com.datavision.backend.user.service.UserService;
@@ -50,5 +51,10 @@ public class DataService {
                 "column2", column2
         );
         return mlClient.postForImage("/api/data/plot", body);
+    }
+
+    public String clean_scale_data(boolean fillNa, String fillMethod, boolean scale, User user){
+        CleanScaleDataDto body = new CleanScaleDataDto(user, fillNa, fillMethod, scale);
+        return mlClient.postForAnalysis("/api/data/clean", body);
     }
 }

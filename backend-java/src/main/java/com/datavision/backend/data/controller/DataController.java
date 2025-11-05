@@ -45,6 +45,11 @@ public class DataController {
         byte[] result = dataService.plot_data(plotType, column1, column2, getUser());
         return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(result);
     }
+    @GetMapping("/clean")
+    public ResponseEntity<String> cleanScaleData(@RequestParam(required = false, defaultValue = "false") boolean fillNa, @RequestParam(required = false, defaultValue = "mean") String fillMethod, @RequestParam(required = false, defaultValue = "false") boolean scale){
+        String result = dataService.clean_scale_data(fillNa, fillMethod, scale, getUser());
+        return ResponseEntity.ok(result);
+    }
 
     private User getUser(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

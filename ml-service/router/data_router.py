@@ -21,6 +21,11 @@ class PlotRequest(BaseModel):
     column1: str
     column2: str
 
+class CleanScaleRequest(BaseModel):
+    file_id: str
+    fill_na: bool = True
+    fill_method: str = "mean"
+    scale: bool = False
 @router.post("/analyze")
 async def analyze(
     request: FileIdRequest,
@@ -60,5 +65,15 @@ async def plot(
             client=client
         )
         return StreamingResponse(image_buffer, media_type="image/png")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/clean")
+async def clean_data(
+    request: CleanScaleRequest,
+    client: Minio = Depends(get_minio_client)
+):
+    try:
+        result = await data_analyze.clean_scale_file(request.file_id, client, fill_na=request.fill_na, fill_method=request.fill_method, scale=request.scale)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
