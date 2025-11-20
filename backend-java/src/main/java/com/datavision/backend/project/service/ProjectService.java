@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -53,6 +55,21 @@ public class ProjectService {
         log.debug("Project fetched successfully");
         return new ProjectDto(project);
     }
+
+    public void addDatasetToProject(Long projectId, String datasetName, String filePath, User user){
+        log.info("Adding dataset {} to project {}", datasetName, projectId);
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
+        if (!isProjectOwner(project, user) ){
+            throw new UserNotOwnerException("User is not owner of the project");
+        }
+        Map<String, String> datasets = project.getDatasets();
+        datasets.put(datasetName, filePath);
+        project.setDatasets(datasets);
+        projectRepository.save(project);
+        log.debug("Dataset {} added to project {}", datasetName, projectId);
+    }
+
 
 
     private boolean isProjectOwner(Project project, User user){

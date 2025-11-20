@@ -2,17 +2,15 @@ package com.datavision.backend.data.service;
 
 import com.datavision.backend.client.MLClient;
 import com.datavision.backend.common.dto.data.CleanScaleDataDto;
+import com.datavision.backend.common.dto.project.ProjectDto;
 import com.datavision.backend.minio.service.MinIOService;
+import com.datavision.backend.project.service.ProjectService;
 import com.datavision.backend.user.model.User;
-import com.datavision.backend.user.service.UserService;
-import io.jsonwebtoken.lang.Maps;
-import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -20,32 +18,37 @@ import java.util.Map;
 @Slf4j
 public class DataService {
     private final MLClient mlClient;
-    private final UserService userService;
     private final MinIOService minIOService;
+    private final ProjectService projectService;
 
-    public boolean uploadData(MultipartFile file, User user){
+    private static final String DATASET_NAME = "original_dataset";
+
+    public void uploadData(Long projectId, MultipartFile file, User user){
         log.info("Uploading data for user: {}", user.getUsername());
         String fileName = minIOService.uploadFile(file);
-        return userService.setCurrentFile(user.getId(), fileName);
+        projectService.addDatasetToProject(projectId, DATASET_NAME, fileName, user);
     }
 
-    public String analyze_data(User user){
+    public String analyze_data(Long projectId, User user){
+        String dataset = getDataset(projectId, user);
         Map<String, String> body = Map.of(
-                "file_id", user.getCurrentFile()
+                "file_id", dataset
         );
         return mlClient.postForAnalysis("/api/data/analyze", body);
     }
-    public String correlation_data(String target, User user){
+    public String correlation_data(Long projectId, String target, User user){
+        String dataset = getDataset(projectId, user);
         Map<String, String> body = Map.of(
-                "file_id", user.getCurrentFile(),
+                "file_id", dataset,
                 "target", target
         );
 
         return mlClient.postForAnalysis("/api/data/correlation", body );
     }
-    public byte[] plot_data(String plotType, String column1, String column2, User user){
+    public byte[] plot_data(Long projectId, String plotType, String column1, String column2, User user){
+        String dataset = getDataset(projectId, user);
         Map<String, String> body = Map.of(
-                "file_id", user.getCurrentFile(),
+                "file_id", dataset,
                 "plot_type", plotType,
                 "column1", column1,
                 "column2", column2
@@ -53,8 +56,16 @@ public class DataService {
         return mlClient.postForImage("/api/data/plot", body);
     }
 
-    public String clean_scale_data(boolean fillNa, String fillMethod, boolean scale, User user){
-        CleanScaleDataDto body = new CleanScaleDataDto(user, fillNa, fillMethod, scale);
+    public String clean_scale_data(Long projectId, boolean fillNa, String fillMethod, boolean scale, User user){
+        log.info("Cleaning data for user: {}", user.getUsername());
+        String dataset = getDataset(projectId, user);
+        CleanScaleDataDto body = new CleanScaleDataDto(dataset, fillNa, fillMethod, scale);
         return mlClient.postForAnalysis("/api/data/clean", body);
+    }
+
+
+    private String getDataset(Long projectId, User user){
+        ProjectDto dto = projectService.getProjectDtoById(projectId, user);
+        return dto.getDatasets().get(DATASET_NAME);
     }
 }

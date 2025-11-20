@@ -14,8 +14,8 @@ public class CleanScaleDataDto {
     private String fill_method;
     private boolean scale;
 
-    public CleanScaleDataDto(User user, boolean fill_na, String fill_method, boolean scale) {
-        this.file_id = user.getCurrentFile();
+    public CleanScaleDataDto(String dataset, boolean fill_na, String fill_method, boolean scale) {
+        this.file_id = dataset;
         this.fill_na = fill_na;
         this.fill_method = fill_method;
         this.scale = scale;

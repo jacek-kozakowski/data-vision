@@ -36,8 +36,6 @@ public class User implements UserDetails {
     @NotNull
     private Boolean enabled = true;
 
-    private String currentFile;
-
     private boolean accountNonExpired = true;
     private boolean accountNonLocked = true;
     private boolean credentialsNonExpired = true;

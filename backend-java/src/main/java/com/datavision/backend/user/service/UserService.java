@@ -30,13 +30,6 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("Invalid username."));
     }
 
-    public boolean setCurrentFile(Long id, String filename){
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Invalid id."));
-        user.setCurrentFile(filename);
-        userRepository.save(user);
-        return true;
-    }
 
 
 
