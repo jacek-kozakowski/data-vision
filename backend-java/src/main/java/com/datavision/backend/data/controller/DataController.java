@@ -3,7 +3,6 @@ package com.datavision.backend.data.controller;
 import com.datavision.backend.auth.AuthUtils;
 import com.datavision.backend.common.dto.response.ApiResponse;
 import com.datavision.backend.data.service.DataService;
-import com.datavision.backend.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,19 +22,19 @@ public class DataController {
         return ResponseEntity.ok(new ApiResponse("Data uploaded successfully"));
     }
     @PostMapping("/analyze")
-    public ResponseEntity<String> analyzeData(@RequestParam(required = true) Long projectId){
-        String result = dataService.analyze_data(projectId, AuthUtils.getUser());
+    public ResponseEntity<String> analyzeData(@RequestParam Long projectId, @RequestParam(required = false, defaultValue = "false") boolean useScaled){
+        String result = dataService.analyze_data(projectId, AuthUtils.getUser(), useScaled);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/correlation")
-    public ResponseEntity<String> correlationData(@RequestParam Long projectId, @RequestParam() String target){
-        String result = dataService.correlation_data(projectId, target, AuthUtils.getUser());
+    public ResponseEntity<String> correlationData(@RequestParam Long projectId, @RequestParam String target, @RequestParam(required = false, defaultValue = "false") boolean useScaled){
+        String result = dataService.correlation_data(projectId, target, AuthUtils.getUser(), useScaled);
         return ResponseEntity.ok(result);
     }
     @PostMapping("/plot")
-    public ResponseEntity<byte[]> plotData(@RequestParam Long projectId, @RequestParam(required = false, defaultValue = "scatter") String plotType,@RequestParam String column1, @RequestParam String column2){
-        byte[] result = dataService.plot_data(projectId, plotType, column1, column2, AuthUtils.getUser());
+    public ResponseEntity<byte[]> plotData(@RequestParam Long projectId, @RequestParam(required = false, defaultValue = "scatter") String plotType,@RequestParam String column1, @RequestParam String column2,@RequestParam(required = false, defaultValue = "false") boolean useScaled){
+        byte[] result = dataService.plot_data(projectId, plotType, column1, column2, AuthUtils.getUser(), useScaled);
         return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(result);
     }
     @PostMapping("/clean")

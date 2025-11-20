@@ -1,4 +1,3 @@
-from fastapi import UploadFile
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
@@ -103,6 +102,8 @@ async def clean_scale_file(file_id: str, client: Minio, fill_na = True, fill_met
     try:
         response = client.get_object(bucket_name, file_id)
         df = pd.read_csv(pd.io.common.BytesIO(response.read()))
+        root, ext = os.path.splitext(file_id)
+        new_file_id = f"{root}_cleaned{ext}"
         return_data = {"success": True}
         if fill_na:
             if fill_method not in available_cleaning_methods:
@@ -126,7 +127,8 @@ async def clean_scale_file(file_id: str, client: Minio, fill_na = True, fill_met
         try:
             csv_bytes = df.to_csv(index=False).encode('utf-8')
             csv_stream = io.BytesIO(csv_bytes)
-            client.put_object(bucket_name, file_id, data=csv_stream, length= len(csv_bytes), content_type='application/csv')
+            client.put_object(bucket_name, new_file_id, data=csv_stream, length= len(csv_bytes), content_type='application/csv')
+            return_data["cleaned_file_id"] = new_file_id
             return return_data
         except Exception as e:
             return {"success" : False,"error": "Error saving cleaned file to Minio: " + str(e)}
