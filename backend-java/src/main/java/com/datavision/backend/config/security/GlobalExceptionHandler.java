@@ -1,9 +1,6 @@
 package com.datavision.backend.config.security;
 
-import com.datavision.backend.common.exceptions.IllegalExtensionException;
-import com.datavision.backend.common.exceptions.MinioUploadException;
-import com.datavision.backend.common.exceptions.UserAlreadyExistsException;
-import com.datavision.backend.common.exceptions.UserNotFoundException;
+import com.datavision.backend.common.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -63,5 +60,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
         return buildErrorResponse(ex, HttpStatus.CONFLICT, ex.getMessage());
+    }
+    @ExceptionHandler(EmptyRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleEmptyRequestException(EmptyRequestException ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(ProjectNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleProjectNotFoundException(ProjectNotFoundException ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+    @ExceptionHandler(UserNotOwnerException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotOwnerException(UserNotOwnerException ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN, ex.getMessage());
     }
 }
