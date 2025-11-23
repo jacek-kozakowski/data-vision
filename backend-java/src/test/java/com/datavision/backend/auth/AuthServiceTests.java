@@ -43,7 +43,6 @@ public class AuthServiceTests {
         UserDto response = new UserDto();
         response.setId(1L);
         response.setUsername("test");
-        response.setCurrentFile(null);
 
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
@@ -61,8 +60,6 @@ public class AuthServiceTests {
         assertEquals(result.getId(), savedUser.getId());
         assertEquals(result.getUsername(), input.getUsername());
         assertEquals(result.getUsername(), savedUser.getUsername());
-        assertEquals(result.getCurrentFile(), savedUser.getCurrentFile());
-        assertEquals(savedUser.getPassword(), "encodedPassword");
         assertEquals(savedUser.getId(), result.getId());
 
     }

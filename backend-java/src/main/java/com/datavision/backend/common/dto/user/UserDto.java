@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,11 +17,9 @@ public class UserDto {
     private Long id;
     @NotBlank
     private String username;
-    private String currentFile;
 
     public UserDto(User user){
         this.id = user.getId();
         this.username = user.getUsername();
-        this.currentFile = user.getCurrentFile();
     }
 }

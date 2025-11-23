@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -56,6 +57,13 @@ public class ProjectService {
         return new ProjectDto(project);
     }
 
+    public List<ProjectDto> getAllProjects(User user){
+        log.info("Fetching all projects for user {}", user.getUsername());
+        List<Project> projects = projectRepository.findAllByUserId(user.getId());
+        return projects.stream().map(ProjectDto::new).toList();
+    }
+
+    @Transactional
     public void addDatasetToProject(Long projectId, String datasetName, String filePath, User user){
         log.info("Adding dataset {} to project {}", datasetName, projectId);
         Project project = projectRepository.findById(projectId)
@@ -70,7 +78,19 @@ public class ProjectService {
         log.debug("Dataset {} added to project {}", datasetName, projectId);
     }
 
-
+    @Transactional
+    public void addPlotToProject(Long projectId,Integer plotId, String filePath, User user){
+        log.info("Adding dataset to project {}",  projectId);
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
+        if (!isProjectOwner(project, user)){
+            throw new UserNotOwnerException("User is not owner of the project");
+        }
+        Map<Integer, String> plots = project.getPlots();
+        plots.put(plotId, filePath);
+        project.setPlots(plots);
+        projectRepository.save(project);
+        log.debug("Plot added to project {}", projectId);
+    }
 
     private boolean isProjectOwner(Project project, User user){
         return project.getUser().getId().equals(user.getId());

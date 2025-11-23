@@ -15,7 +15,7 @@ available_plots = ["scatter", "histogram", "boxplot", "line"]
 available_cleaning_methods = ["mean", "median"]
 
 
-async def analyze_data_structure(file_id: str, client: Minio):
+def analyze_data_structure(file_id: str, client: Minio):
     response = None
     try:
         response = client.get_object(bucket_name, file_id)
@@ -42,7 +42,7 @@ async def analyze_data_structure(file_id: str, client: Minio):
             response.close()
             response.release_conn()
 
-async def correlation_matrix(file_id: str, target: str, client: Minio):
+def correlation_matrix(file_id: str, target: str, client: Minio):
     response = None
     try:
         response = client.get_object(bucket_name, file_id)
@@ -59,7 +59,7 @@ async def correlation_matrix(file_id: str, target: str, client: Minio):
             response.release_conn()
 
 
-async def generate_plot(file_id: str, plot_type: str, column1: str, column2: str, client: Minio):
+def generate_plot(file_id: str, plot_type: str, column1: str, column2: str, client: Minio):
     response = None
     try:
         response = client.get_object(bucket_name, file_id)
@@ -73,31 +73,37 @@ async def generate_plot(file_id: str, plot_type: str, column1: str, column2: str
 
         if plot_type not in available_plots:
             return {"error": f"Plot type '{plot_type}' not supported"}
+        fig, ax = plt.subplots(figsize=(10, 6))
 
-        plt.figure(figsize=(10, 6))
         if plot_type == "scatter":
-            plt.scatter(df[column1], df[column2])
+            ax.scatter(df[column1], df[column2])
         elif plot_type == "histogram":
-            plt.hist(df[column1])
+            ax.hist(df[column1])
         elif plot_type == "boxplot":
-            plt.boxplot(df[column1])
+            ax.boxplot(df[column1])
         elif plot_type == "line":
-            plt.plot(df[column1], df[column2])
-        plt.xlabel(column1)
-        plt.ylabel(column2)
+            ax.plot(df[column1], df[column2])
 
-        plt.title(f"{plot_type} Plot of {column1} vs {column2}")
+        ax.set_xlabel(column1)
+        ax.set_ylabel(column2)
+
+        ax.set_title(f"{plot_type} Plot of {column1} vs {column2}")
 
         buf = io.BytesIO()
-        plt.savefig(buf, format='png')
+        fig.savefig(buf, format='png')
+        plt.close(fig)
         buf.seek(0)
-        return buf
+
+        root, _ = os.path.splitext(file_id)
+        new_file_id = f"{root}_{plot_type}_{column1}_{column2}.png"
+        client.put_object(bucket_name, new_file_id, data=buf, length=buf.getbuffer().nbytes, content_type='image/png')
+        return {"plot_file_id" : new_file_id}
     finally:
         if response:
             response.close()
             response.release_conn()
 
-async def clean_scale_file(file_id: str, client: Minio, fill_na = True, fill_method = "mean",  scale = False):
+def clean_scale_file(file_id: str, client: Minio, fill_na = True, fill_method = "mean",  scale = False):
     response = None
     try:
         response = client.get_object(bucket_name, file_id)

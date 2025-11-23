@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from services import data_analyze
 from dependencies import get_minio_client
 from starlette.responses import StreamingResponse
+import asyncio
+from functools import partial
 
 router = APIRouter()
 
@@ -32,7 +34,13 @@ async def analyze(
     client: Minio = Depends(get_minio_client)
 ):
     try:
-        result = await data_analyze.analyze_data_structure(request.file_id, client)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor (
+            None,
+            partial(data_analyze.analyze_data_structure,
+                    file_id = request.file_id,
+                    client = client)
+        )
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -43,7 +51,14 @@ async def correlation(
     client: Minio = Depends(get_minio_client)
 ):
     try:
-        result = await data_analyze.correlation_matrix(request.file_id, request.target, client)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None,
+            partial(data_analyze.correlation_matrix,
+                    file_id =request.file_id,
+                    target = request.target,
+                    client = client)
+        )
         return {
             "target": request.target,
             "correlation": result
@@ -57,14 +72,17 @@ async def plot(
     client: Minio = Depends(get_minio_client)
 ):
     try:
-        image_buffer = await data_analyze.generate_plot(
-            file_id=request.file_id,
-            plot_type=request.plot_type,
-            column1=request.column1,
-            column2=request.column2,
-            client=client
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None,
+            partial(data_analyze.generate_plot,
+                    file_id = request.file_id,
+                    plot_type = request.plot_type,
+                    column1 = request.column1,
+                    column2 = request.column2,
+                    client = client)
         )
-        return StreamingResponse(image_buffer, media_type="image/png")
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 @router.post("/clean")
@@ -73,7 +91,16 @@ async def clean_data(
     client: Minio = Depends(get_minio_client)
 ):
     try:
-        result = await data_analyze.clean_scale_file(request.file_id, client, fill_na=request.fill_na, fill_method=request.fill_method, scale=request.scale)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None,
+            partial(data_analyze.clean_scale_file,
+                    file_id=request.file_id,
+                    client=client,
+                    fill_na=request.fill_na,
+                    fill_method=request.fill_method,
+                    scale=request.scale)
+        )
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

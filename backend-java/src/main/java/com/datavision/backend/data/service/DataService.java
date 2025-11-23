@@ -49,7 +49,7 @@ public class DataService {
 
         return mlClient.postForAnalysis("/api/data/correlation", body );
     }
-    public byte[] plot_data(Long projectId, String plotType, String column1, String column2, User user, boolean useScaled){
+    public byte[] plot_data(Long projectId, Integer plotId, String plotType, String column1, String column2, User user, boolean useScaled){
         String dataset = getDataset(projectId, user, useScaled);
         Map<String, String> body = Map.of(
                 "file_id", dataset,
@@ -57,7 +57,17 @@ public class DataService {
                 "column1", column1,
                 "column2", column2
         );
-        return mlClient.postForImage("/api/data/plot", body);
+        String response =  mlClient.postForAnalysis("/api/data/plot", body);
+        String minioPath = null;
+        try{
+            JsonNode node = new ObjectMapper().readTree(response);
+            minioPath = node.get("plot_file_id").asText();
+            projectService.addPlotToProject(projectId, plotId, minioPath, user);
+        }catch (JsonProcessingException e ){
+            log.error("Error parsing response: {}", e.getMessage());
+        }
+
+        return minIOService.downloadFile(minioPath);
     }
 
     public String clean_scale_data(Long projectId, boolean fillNa, String fillMethod, boolean scale, User user){
@@ -67,7 +77,7 @@ public class DataService {
         String response =  mlClient.postForAnalysis("/api/data/clean", body);
         try{
             JsonNode root = new ObjectMapper().readTree(response);
-            String scaledDataset = root.get("new_file_id").asText();
+            String scaledDataset = root.get("cleaned_file_id").asText();
 
             projectService.addDatasetToProject(projectId, SCALED_DATASET_NAME, scaledDataset, user);
         }catch (JsonProcessingException e ){
