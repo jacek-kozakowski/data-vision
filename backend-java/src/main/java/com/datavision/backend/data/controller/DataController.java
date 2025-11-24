@@ -1,8 +1,11 @@
 package com.datavision.backend.data.controller;
 
 import com.datavision.backend.auth.AuthUtilsService;
+import com.datavision.backend.common.dto.data.requests.CleanDataRequest;
+import com.datavision.backend.common.dto.data.requests.PlotDataRequest;
 import com.datavision.backend.common.dto.response.ApiResponse;
 import com.datavision.backend.data.service.DataService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,30 +20,30 @@ public class DataController {
     private final DataService dataService;
     private final AuthUtilsService authUtils;
 
-    @PostMapping("/upload")
-    public ResponseEntity<ApiResponse> uploadMultipartFile(@RequestParam Long projectId, @RequestPart MultipartFile file){
+    @PostMapping("/{projectId}/upload")
+    public ResponseEntity<ApiResponse> uploadMultipartFile(@PathVariable Long projectId, @RequestPart MultipartFile file){
         dataService.uploadData(projectId, file, authUtils.getAuthenticatedUser());
         return ResponseEntity.ok(new ApiResponse("Data uploaded successfully"));
     }
-    @PostMapping("/analyze")
-    public ResponseEntity<String> analyzeData(@RequestParam Long projectId, @RequestParam(required = false, defaultValue = "false") boolean useScaled){
-        String result = dataService.analyze_data(projectId, authUtils.getAuthenticatedUser(), useScaled);
+    @GetMapping("/{projectId}/analyze")
+    public ResponseEntity<Object> analyzeData(@PathVariable Long projectId, @RequestParam(required = false, defaultValue = "false") boolean useScaled){
+        String result = dataService.analyzeData(projectId, authUtils.getAuthenticatedUser(), useScaled);
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/correlation")
-    public ResponseEntity<String> correlationData(@RequestParam Long projectId, @RequestParam String target, @RequestParam(required = false, defaultValue = "false") boolean useScaled){
-        String result = dataService.correlation_data(projectId, target, authUtils.getAuthenticatedUser(), useScaled);
+    @GetMapping("/{projectId}/correlation")
+    public ResponseEntity<Object> correlationData(@PathVariable Long projectId, @RequestParam String target, @RequestParam(required = false, defaultValue = "false") boolean useScaled){
+        String result = dataService.correlationData(projectId, target, authUtils.getAuthenticatedUser(), useScaled);
         return ResponseEntity.ok(result);
     }
-    @PostMapping("/plot")
-    public ResponseEntity<byte[]> plotData(@RequestParam Long projectId, @RequestParam Integer plotId, @RequestParam(required = false, defaultValue = "scatter") String plotType,@RequestParam String column1, @RequestParam String column2,@RequestParam(required = false, defaultValue = "false") boolean useScaled){
-        byte[] result = dataService.plot_data(projectId, plotId, plotType, column1, column2, authUtils.getAuthenticatedUser(), useScaled);
+    @PostMapping("/{projectId}/plot")
+    public ResponseEntity<byte[]> plotData(@PathVariable Long projectId, @RequestBody @Valid PlotDataRequest request){
+        byte[] result = dataService.plotData(projectId, request, authUtils.getAuthenticatedUser());
         return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(result);
     }
-    @PostMapping("/clean")
-    public ResponseEntity<String> cleanScaleData(@RequestParam Long projectId, @RequestParam(required = false, defaultValue = "false") boolean fillNa, @RequestParam(required = false, defaultValue = "mean") String fillMethod, @RequestParam(required = false, defaultValue = "false") boolean scale){
-        String result = dataService.clean_scale_data(projectId, fillNa, fillMethod, scale, authUtils.getAuthenticatedUser());
+    @PostMapping("/{projectId}/clean")
+    public ResponseEntity<Object> cleanScaleData(@PathVariable Long projectId, @RequestBody  CleanDataRequest request){
+        String result = dataService.cleanScaleData(projectId,request, authUtils.getAuthenticatedUser());
         return ResponseEntity.ok(result);
     }
 

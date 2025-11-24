@@ -2,12 +2,14 @@ package com.datavision.backend.common.dto.project;
 
 import com.datavision.backend.project.model.Project;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Map;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class ProjectDto {
 
     private Long id;

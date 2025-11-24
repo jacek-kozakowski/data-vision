@@ -1,8 +1,11 @@
 package com.datavision.backend.data.service;
 
 import com.datavision.backend.client.MLClient;
-import com.datavision.backend.common.dto.data.CleanScaleDataDto;
+import com.datavision.backend.common.dto.data.*;
+import com.datavision.backend.common.dto.data.requests.CleanDataRequest;
+import com.datavision.backend.common.dto.data.requests.PlotDataRequest;
 import com.datavision.backend.common.dto.project.ProjectDto;
+import com.datavision.backend.common.exceptions.ResponseParsingException;
 import com.datavision.backend.minio.service.MinIOService;
 import com.datavision.backend.project.service.ProjectService;
 import com.datavision.backend.user.model.User;
@@ -13,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,72 +28,65 @@ public class DataService {
     private static final String DATASET_NAME = "original_dataset";
     private static final String SCALED_DATASET_NAME = "scaled_dataset";
 
-    public void uploadData(Long projectId, MultipartFile file, User user){
+    public void uploadData(Long projectId, MultipartFile file, User user) {
         log.info("Uploading data for user: {}", user.getUsername());
         String fileName = minIOService.uploadFile(file);
         projectService.addDatasetToProject(projectId, DATASET_NAME, fileName, user);
     }
 
-    public String analyze_data(Long projectId, User user, boolean useScaled){
+    public String analyzeData(Long projectId, User user, boolean useScaled) {
         String dataset = getDataset(projectId, user, useScaled);
-        Map<String, String> body = Map.of(
-                "file_id", dataset
-        );
+        AnalyzeDataDto body = new AnalyzeDataDto(dataset);
         return mlClient.postForAnalysis("/api/data/analyze", body);
     }
-    public String correlation_data(Long projectId, String target, User user, boolean useScaled){
-        String dataset = getDataset(projectId, user, useScaled);
-        Map<String, String> body = Map.of(
-                "file_id", dataset,
-                "target", target
-        );
 
-        return mlClient.postForAnalysis("/api/data/correlation", body );
-    }
-    public byte[] plot_data(Long projectId, Integer plotId, String plotType, String column1, String column2, User user, boolean useScaled){
+    public String correlationData(Long projectId, String target, User user, boolean useScaled) {
         String dataset = getDataset(projectId, user, useScaled);
-        Map<String, String> body = Map.of(
-                "file_id", dataset,
-                "plot_type", plotType,
-                "column1", column1,
-                "column2", column2
-        );
-        String response =  mlClient.postForAnalysis("/api/data/plot", body);
+        CorrelationDataDto body = new CorrelationDataDto(dataset, target);
+
+        return mlClient.postForAnalysis("/api/data/correlation", body);
+    }
+
+    public byte[] plotData(Long projectId, PlotDataRequest request, User user) {
+        String dataset = getDataset(projectId, user, request.getUseScaled());
+        PlotDataDto body = new PlotDataDto(dataset, request.getPlotType(), request.getColumn1(), request.getColumn2());
+        String response = mlClient.postForAnalysis("/api/data/plot", body);
         String minioPath = null;
-        try{
+        try {
             JsonNode node = new ObjectMapper().readTree(response);
             minioPath = node.get("plot_file_id").asText();
-            projectService.addPlotToProject(projectId, plotId, minioPath, user);
-        }catch (JsonProcessingException e ){
+            projectService.addPlotToProject(projectId, request.getPlotId(), minioPath, user);
+        } catch (JsonProcessingException e) {
             log.error("Error parsing response: {}", e.getMessage());
+        }
+        if (minioPath == null) {
+            throw new ResponseParsingException("Error parsing response");
         }
 
         return minIOService.downloadFile(minioPath);
     }
 
-    public String clean_scale_data(Long projectId, boolean fillNa, String fillMethod, boolean scale, User user){
+    public String cleanScaleData(Long projectId, CleanDataRequest request, User user) {
         log.info("Cleaning data for user: {}", user.getUsername());
         String dataset = getDataset(projectId, user);
-        CleanScaleDataDto body = new CleanScaleDataDto(dataset, fillNa, fillMethod, scale);
-        String response =  mlClient.postForAnalysis("/api/data/clean", body);
-        try{
+        CleanScaleDataDto body = new CleanScaleDataDto(dataset, request.getFillNa(), request.getFillMethod(), request.getScale());
+        String response = mlClient.postForAnalysis("/api/data/clean", body);
+        try {
             JsonNode root = new ObjectMapper().readTree(response);
             String scaledDataset = root.get("cleaned_file_id").asText();
-
             projectService.addDatasetToProject(projectId, SCALED_DATASET_NAME, scaledDataset, user);
-        }catch (JsonProcessingException e ){
+        } catch (JsonProcessingException e) {
             log.error("Error parsing response: {}", e.getMessage());
         }
         return response;
     }
 
-
-    private String getDataset(Long projectId, User user){
+    private String getDataset(Long projectId, User user) {
         ProjectDto dto = projectService.getProjectDtoById(projectId, user);
         return dto.getDatasets().get(DATASET_NAME);
     }
 
-    private String getDataset(Long projectId, User user, boolean useScaled){
+    private String getDataset(Long projectId, User user, boolean useScaled) {
         String datasetName = useScaled ? SCALED_DATASET_NAME : DATASET_NAME;
         ProjectDto dto = projectService.getProjectDtoById(projectId, user);
         return dto.getDatasets().get(datasetName);

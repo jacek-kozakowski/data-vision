@@ -73,4 +73,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleUserNotOwnerException(UserNotOwnerException ex) {
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN, ex.getMessage());
     }
+    @ExceptionHandler(ResponseParsingException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseParsingException(ResponseParsingException ex) {
+        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
 }
