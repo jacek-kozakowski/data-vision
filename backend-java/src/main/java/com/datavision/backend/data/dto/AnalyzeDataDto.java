@@ -1,4 +1,4 @@
-package com.datavision.backend.common.dto.data;
+package com.datavision.backend.data.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

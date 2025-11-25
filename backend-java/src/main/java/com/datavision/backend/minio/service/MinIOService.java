@@ -1,6 +1,7 @@
 package com.datavision.backend.minio.service;
 
 import com.datavision.backend.common.exceptions.IllegalExtensionException;
+import com.datavision.backend.common.exceptions.MinioDownloadException;
 import com.datavision.backend.common.exceptions.MinioUploadException;
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectResponse;
@@ -64,7 +65,7 @@ public class MinIOService {
             return response.readAllBytes();
         }catch (Exception e){
             log.error("Failed to download file from MinIO", e);
-            throw new MinioUploadException("Failed to download file from MinIO");
+            throw new MinioDownloadException("Failed to download file from MinIO");
         }
     }
 

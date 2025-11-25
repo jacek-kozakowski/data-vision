@@ -1,7 +1,7 @@
 package com.datavision.backend.project.service;
 
-import com.datavision.backend.common.dto.project.CreateProjectDto;
-import com.datavision.backend.common.dto.project.ProjectDto;
+import com.datavision.backend.project.dto.CreateProjectDto;
+import com.datavision.backend.project.dto.ProjectDto;
 import com.datavision.backend.common.exceptions.EmptyRequestException;
 import com.datavision.backend.common.exceptions.ProjectNotFoundException;
 import com.datavision.backend.common.exceptions.UserNotOwnerException;
@@ -19,14 +19,16 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ProjectService {
+public class ProjectService implements IProjectService{
 
     private final ProjectRepository projectRepository;
 
+    @Override
     @Transactional
     public ProjectDto createProject(CreateProjectDto createProjectDto, User user){
         log.info("Creating project for user: {}", user.getUsername());
         if (createProjectDto == null){
+            log.warn("Empty request body");
             throw new EmptyRequestException("Cant create project without data");
         }
         Project project = new Project(createProjectDto, user);
@@ -35,40 +37,47 @@ public class ProjectService {
         return new ProjectDto(savedProject);
     }
 
+    @Override
     @Transactional
     public void deleteProjectById(Long id, User user){
         log.info("Deleting project with id: {}", id);
         Project project = projectRepository.findById(id).orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
         if (!isProjectOwner(project, user) ){
+            log.warn("User is not owner of the project");
             throw new UserNotOwnerException("User is not owner of the project");
         }
         projectRepository.delete(project);
         log.debug("Project deleted successfully");
     }
 
+    @Override
     public ProjectDto getProjectDtoById(Long id, User user){
         log.info("Fetching project with id: {}", id);
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
         if (!isProjectOwner(project, user) ){
+            log.warn("User is not owner of the project");
             throw new UserNotOwnerException("User is not owner of the project");
         }
         log.debug("Project fetched successfully");
         return new ProjectDto(project);
     }
 
+    @Override
     public List<ProjectDto> getAllProjects(User user){
         log.info("Fetching all projects for user {}", user.getUsername());
         List<Project> projects = projectRepository.findAllByUserId(user.getId());
         return projects.stream().map(ProjectDto::new).toList();
     }
 
+    @Override
     @Transactional
     public void addDatasetToProject(Long projectId, String datasetName, String filePath, User user){
         log.info("Adding dataset {} to project {}", datasetName, projectId);
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
         if (!isProjectOwner(project, user) ){
+            log.warn("User is not owner of the project");
             throw new UserNotOwnerException("User is not owner of the project");
         }
         Map<String, String> datasets = project.getDatasets();
@@ -78,11 +87,13 @@ public class ProjectService {
         log.debug("Dataset {} added to project {}", datasetName, projectId);
     }
 
+    @Override
     @Transactional
     public void addPlotToProject(Long projectId,Integer plotId, String filePath, User user){
         log.info("Adding dataset to project {}",  projectId);
         Project project = projectRepository.findById(projectId).orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
         if (!isProjectOwner(project, user)){
+            log.warn("User is not owner of the project");
             throw new UserNotOwnerException("User is not owner of the project");
         }
         Map<Integer, String> plots = project.getPlots();

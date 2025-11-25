@@ -1,10 +1,8 @@
-package com.datavision.backend.common.dto.user;
+package com.datavision.backend.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Setter

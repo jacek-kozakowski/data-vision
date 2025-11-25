@@ -53,6 +53,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleMinioUploadException(MinioUploadException ex) {
         return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
+
+    @ExceptionHandler(MinioDownloadException.class)
+    public ResponseEntity<Map<String, Object>> handleMinioDownloadException(MinioDownloadException ex) {
+        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
@@ -75,6 +81,10 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(ResponseParsingException.class)
     public ResponseEntity<Map<String, Object>> handleResponseParsingException(ResponseParsingException ex) {
+        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+    @ExceptionHandler(MLClientException.class)
+    public ResponseEntity<Map<String, Object>> handleMLClientException(MLClientException ex) {
         return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 }

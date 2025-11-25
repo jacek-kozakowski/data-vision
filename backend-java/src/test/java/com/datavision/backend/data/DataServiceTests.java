@@ -1,13 +1,15 @@
 package com.datavision.backend.data;
 
 import com.datavision.backend.client.MLClient;
-import com.datavision.backend.common.dto.data.*;
-import com.datavision.backend.common.dto.data.requests.CleanDataRequest;
-import com.datavision.backend.common.dto.data.requests.PlotDataRequest;
-import com.datavision.backend.common.dto.project.ProjectDto;
+import com.datavision.backend.data.dto.AnalyzeDataDto;
+import com.datavision.backend.data.dto.CorrelationDataDto;
+import com.datavision.backend.data.dto.PlotDataDto;
+import com.datavision.backend.data.dto.requests.CleanDataRequest;
+import com.datavision.backend.data.dto.requests.PlotDataRequest;
+import com.datavision.backend.project.dto.ProjectDto;
 import com.datavision.backend.data.service.DataService;
 import com.datavision.backend.minio.service.MinIOService;
-import com.datavision.backend.project.service.ProjectService;
+import com.datavision.backend.project.service.IProjectService;
 import com.datavision.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
-import com.datavision.backend.common.dto.data.CleanScaleDataDto;
+import com.datavision.backend.data.dto.CleanScaleDataDto;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +37,7 @@ public class DataServiceTests {
     private MinIOService minIOService;
 
     @Mock
-    private ProjectService projectService;
+    private IProjectService projectService;
 
     @InjectMocks
     private DataService dataService;
@@ -128,7 +130,7 @@ public class DataServiceTests {
         when(mlClient.postForAnalysis(eq("/api/data/plot"), any(PlotDataDto.class))).thenReturn(expectedResponse);
         when(minIOService.downloadFile("plot-uuid")).thenReturn(expectedPlot);
 
-        byte[] result = dataService.plotData(projectId, plotDataRequest,user);
+        byte[] result = dataService.plotData(projectId, plotDataRequest, user);
 
         verify(mlClient, times(1)).postForAnalysis(eq("/api/data/plot"), any(PlotDataDto.class));
         verify(projectService, times(1)).addPlotToProject(projectId, plotId, "plot-uuid", user);
@@ -153,7 +155,7 @@ public class DataServiceTests {
         when(mlClient.postForAnalysis(eq("/api/data/clean"), any(CleanScaleDataDto.class)))
                 .thenReturn(expectedResponse);
 
-        String result = dataService.cleanScaleData(projectId, body,  user);
+        String result = dataService.cleanScaleData(projectId, body, user);
 
         verify(mlClient, times(1)).postForAnalysis(eq("/api/data/clean"), any(CleanScaleDataDto.class));
         verify(projectService, times(1)).addDatasetToProject(projectId, "scaled_dataset", "scaled-uuid", user);

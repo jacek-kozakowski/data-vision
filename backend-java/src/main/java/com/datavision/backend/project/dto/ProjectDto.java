@@ -1,4 +1,4 @@
-package com.datavision.backend.common.dto.project;
+package com.datavision.backend.project.dto;
 
 import com.datavision.backend.project.model.Project;
 import lombok.Getter;

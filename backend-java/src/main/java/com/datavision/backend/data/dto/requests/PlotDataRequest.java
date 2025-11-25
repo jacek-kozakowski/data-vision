@@ -1,4 +1,4 @@
-package com.datavision.backend.common.dto.data.requests;
+package com.datavision.backend.data.dto.requests;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

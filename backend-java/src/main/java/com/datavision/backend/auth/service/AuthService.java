@@ -1,9 +1,10 @@
 package com.datavision.backend.auth.service;
 
-import com.datavision.backend.common.dto.user.LoginResponseDto;
-import com.datavision.backend.common.dto.user.LoginUserDto;
-import com.datavision.backend.common.dto.user.RegisterUserDto;
-import com.datavision.backend.common.dto.user.UserDto;
+import com.datavision.backend.auth.jwt.JwtService;
+import com.datavision.backend.auth.dto.LoginResponseDto;
+import com.datavision.backend.auth.dto.LoginUserDto;
+import com.datavision.backend.auth.dto.RegisterUserDto;
+import com.datavision.backend.user.dto.UserDto;
 import com.datavision.backend.common.exceptions.UserAlreadyExistsException;
 import com.datavision.backend.common.exceptions.UserNotFoundException;
 import com.datavision.backend.user.model.User;
@@ -21,12 +22,13 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuthService {
+public class AuthService implements IAuthService{
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+    @Override
     @Transactional
     public UserDto register(RegisterUserDto registerUserDto){
         log.info("Registering user: {}", registerUserDto.getUsername());
@@ -42,6 +44,7 @@ public class AuthService {
         return new UserDto(savedUser);
     }
 
+    @Override
     public LoginResponseDto login(LoginUserDto input){
         log.info("Authenticating user {}", input.getUsername());
         Optional<User> user = userRepository.findByUsername(input.getUsername());

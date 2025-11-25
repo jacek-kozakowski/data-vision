@@ -1,4 +1,4 @@
-package com.datavision.backend.common.dto.data;
+package com.datavision.backend.data.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CorrelationDataDto {
+public class PlotDataDto {
     private String file_id;
-    private String target;
+    private String plot_type;
+    private String column1;
+    private String column2;
 }

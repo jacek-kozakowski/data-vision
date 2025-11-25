@@ -1,9 +1,9 @@
 package com.datavision.backend.auth;
 
 import com.datavision.backend.auth.service.AuthService;
-import com.datavision.backend.auth.service.JwtService;
-import com.datavision.backend.common.dto.user.RegisterUserDto;
-import com.datavision.backend.common.dto.user.UserDto;
+import com.datavision.backend.auth.jwt.JwtService;
+import com.datavision.backend.auth.dto.RegisterUserDto;
+import com.datavision.backend.user.dto.UserDto;
 import com.datavision.backend.user.model.User;
 import com.datavision.backend.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;

@@ -1,6 +1,5 @@
-package com.datavision.backend.common.dto.data;
+package com.datavision.backend.data.dto;
 
-import com.datavision.backend.user.model.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

@@ -1,6 +1,6 @@
 package com.datavision.backend.project.model;
 
-import com.datavision.backend.common.dto.project.CreateProjectDto;
+import com.datavision.backend.project.dto.CreateProjectDto;
 import com.datavision.backend.user.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;

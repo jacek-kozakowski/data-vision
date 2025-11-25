@@ -1,4 +1,4 @@
-package com.datavision.backend.auth.service;
+package com.datavision.backend.auth.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

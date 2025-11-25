@@ -1,6 +1,5 @@
-package com.datavision.backend.auth.security;
+package com.datavision.backend.auth.jwt;
 
-import com.datavision.backend.auth.service.JwtService;
 import com.datavision.backend.user.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

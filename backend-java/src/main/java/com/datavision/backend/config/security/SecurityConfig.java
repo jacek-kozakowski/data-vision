@@ -1,6 +1,6 @@
 package com.datavision.backend.config.security;
 
-import com.datavision.backend.auth.security.JwtFilter;
+import com.datavision.backend.auth.jwt.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
