@@ -39,6 +39,18 @@ public class Project {
     @Column(name = "minio_path", length = 1024)
     private Map<Integer, String> plots = new HashMap<>();
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "project_models", joinColumns = @JoinColumn(name = "project_id"))
+    @MapKeyColumn(name = "model_name", length = 100)
+    @Column(name = "minio_url", length = 1024)
+    private Map<String, String> models = new HashMap<>();
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "project_pipelines", joinColumns = @JoinColumn(name = "project_id"))
+    @MapKeyColumn(name = "pipeline_name", length = 120)
+    @Column(name = "minio_url", length = 1024)
+    private Map<String, String> pipelines = new HashMap<>();
+
     public Project(CreateProjectDto dto, User user) {
         this.projectName = dto.getName();
         this.user = user;
