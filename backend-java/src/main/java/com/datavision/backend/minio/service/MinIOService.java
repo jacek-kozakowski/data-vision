@@ -2,11 +2,9 @@ package com.datavision.backend.minio.service;
 
 import com.datavision.backend.common.exceptions.IllegalExtensionException;
 import com.datavision.backend.common.exceptions.MinioDownloadException;
+import com.datavision.backend.common.exceptions.MinioRemoveException;
 import com.datavision.backend.common.exceptions.MinioUploadException;
-import io.minio.GetObjectArgs;
-import io.minio.GetObjectResponse;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
+import io.minio.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +26,8 @@ public class MinIOService {
     @Value("${minio.bucket}")
     private String bucketName;
 
-    public String uploadFile(MultipartFile file){
-        try{
+    public String uploadFile(MultipartFile file) {
+        try {
             String fileName = file.getOriginalFilename();
             String fileExtension = fileName.substring(fileName.lastIndexOf("."));
             if (fileExtension.isEmpty() || !ALLOWED_FILE_TYPES.contains(fileExtension)) {
@@ -46,26 +44,43 @@ public class MinIOService {
                     .build());
             log.info("File uploaded successfully to MinIO");
             return newFileName;
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Failed to upload file to MinIO", e);
             throw new MinioUploadException("Failed to upload file to MinIO");
         }
     }
 
-    public byte[] downloadFile(String fileName){
+    public byte[] downloadFile(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            throw new IllegalArgumentException("File name cannot be empty");
+        }
+        try {
+            GetObjectResponse response = minioClient.getObject(GetObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(fileName)
+                    .build());
+            return response.readAllBytes();
+        } catch (Exception e) {
+            log.error("Failed to download file from MinIO", e);
+            throw new MinioDownloadException("Failed to download file from MinIO");
+        }
+    }
+
+    public String downloadFileAsString(String fileName) {
+        byte[] fileBytes = downloadFile(fileName);
+        return new String(fileBytes, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    public void deleteFile(String fileName) {
         if (fileName == null || fileName.isEmpty()){
             throw new IllegalArgumentException("File name cannot be empty");
         }
         try{
-            GetObjectResponse response= minioClient.getObject(GetObjectArgs.builder()
-                    .bucket(bucketName)
-                    .object(fileName)
-                    .build()
+             minioClient.removeObject(
+                    RemoveObjectArgs.builder().bucket(bucketName).object(fileName).build()
             );
-            return response.readAllBytes();
         }catch (Exception e){
-            log.error("Failed to download file from MinIO", e);
-            throw new MinioDownloadException("Failed to download file from MinIO");
+            throw new MinioRemoveException("Failed to delete file from MinIO");
         }
     }
 

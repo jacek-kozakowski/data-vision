@@ -1,10 +1,10 @@
-import os
 from minio import Minio
+from services import MINIO_URL, MINIO_ACCESS_KEY, MINIO_SECRET_KEY
 
 minio_client = Minio(
-    os.environ.get("MINIO_URL"),
-    access_key=os.environ.get("MINIO_ACCESS_KEY"),
-    secret_key=os.environ.get("MINIO_SECRET_KEY"),
+    MINIO_URL,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
     secure=False
 )
 

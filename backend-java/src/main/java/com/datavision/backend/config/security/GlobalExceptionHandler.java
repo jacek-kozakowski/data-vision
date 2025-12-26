@@ -87,4 +87,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleMLClientException(MLClientException ex) {
         return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
+    @ExceptionHandler(MinioRemoveException.class)
+    public ResponseEntity<Map<String, Object>> handleMinioRemoveException(MinioRemoveException ex) {
+        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+    @ExceptionHandler(ModelNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleModelNotFoundException(ModelNotFoundException ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+    @ExceptionHandler(PipelineNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePipelineNotFoundException(PipelineNotFoundException ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage());
+    }
 }

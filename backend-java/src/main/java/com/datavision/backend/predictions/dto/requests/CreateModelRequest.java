@@ -1,6 +1,7 @@
 package com.datavision.backend.predictions.dto.requests;
 
 import com.datavision.backend.predictions.type.ModelType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,10 +15,12 @@ import java.util.List;
 public class CreateModelRequest {
 
     @NotBlank(message = "Model name cannot be empty")
-    @Size(min=3, max=100)
+    @Size(min = 3, max = 100)
+    @JsonProperty("model_name")
     private String modelName;
 
     @NotNull(message = "Model cannot be null")
+    @JsonProperty("model_type")
     private ModelType modelType;
 
     @NotBlank(message = "Target column cannot be empty")
@@ -28,12 +31,17 @@ public class CreateModelRequest {
     @NotNull
     @DecimalMin(value = "0.1", message = "Train size must be at least 0.1")
     @DecimalMax(value = "0.9", message = "Train size must be at most 0.9")
+    @JsonProperty("train_size")
     private Float trainSize;
 
+    @JsonProperty("use_scaled")
     private Boolean useScaled = false;
 
+    @JsonProperty("random_state")
     private Integer randomState = 42;
 
+    @JsonProperty("dataset_name")
+    private String datasetName;
 
     public Boolean getUseScaled() {
         return useScaled != null ? useScaled : false;

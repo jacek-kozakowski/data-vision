@@ -42,4 +42,5 @@ public class ModelInfoResponse {
     private Integer trainingDataSize;
     private Integer testDataSize;
     private Double trainingTime;
+    private List<String> categoricalCols;
 }

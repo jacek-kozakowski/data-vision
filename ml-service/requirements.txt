@@ -8,3 +8,4 @@ python-multipart
 starlette
 minio
 asyncio
+xgboost

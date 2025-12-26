@@ -3,11 +3,10 @@ from minio import Minio
 from pydantic import BaseModel
 from services import data_analyze
 from dependencies import get_minio_client
-from starlette.responses import StreamingResponse
 import asyncio
 from functools import partial
 
-router = APIRouter()
+data_router = APIRouter()
 
 
 class FileIdRequest(BaseModel):
@@ -28,7 +27,8 @@ class CleanScaleRequest(BaseModel):
     fill_na: bool = True
     fill_method: str = "mean"
     scale: bool = False
-@router.post("/analyze")
+
+@data_router.post("/analyze")
 async def analyze(
     request: FileIdRequest,
     client: Minio = Depends(get_minio_client)
@@ -45,7 +45,7 @@ async def analyze(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/correlation")
+@data_router.post("/correlation")
 async def correlation(
     request: CorrelationRequest,
     client: Minio = Depends(get_minio_client)
@@ -66,7 +66,7 @@ async def correlation(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/plot")
+@data_router.post("/plot")
 async def plot(
     request: PlotRequest,
     client: Minio = Depends(get_minio_client)
@@ -85,7 +85,7 @@ async def plot(
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-@router.post("/clean")
+@data_router.post("/clean")
 async def clean_data(
     request: CleanScaleRequest,
     client: Minio = Depends(get_minio_client)

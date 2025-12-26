@@ -103,6 +103,66 @@ public class ProjectService implements IProjectService{
         log.debug("Plot added to project {}", projectId);
     }
 
+    @Override
+    @Transactional
+    public void addModelToProject(Long projectId, String modelName, String filePath, User user){
+        log.info("Adding model {} to project {}", modelName, projectId);
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
+        if (!isProjectOwner(project, user)){
+            log.warn("User is not owner of the project");
+            throw new UserNotOwnerException("User is not owner of the project");
+        }
+        Map<String, String> models = project.getModels();
+        models.put(modelName, filePath);
+        project.setModels(models);
+        projectRepository.save(project);
+        log.debug("Model {} added to project {}", modelName, projectId);
+    }
+
+    @Override
+    @Transactional
+    public void removeModelFromProject(Long projectId, String modelName, User user){
+        log.info("Removing model {} from project {}", modelName, projectId);
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
+        if (!isProjectOwner(project, user)){
+            log.warn("User is not owner of the project");
+            throw new UserNotOwnerException("User is not owner of the project");
+        }
+        Map<String, String> models = project.getModels();
+        models.remove(modelName);
+        project.setModels(models);
+        projectRepository.save(project);
+        log.debug("Model {} removed from project {}", modelName, projectId);
+    }
+
+    @Override
+    @Transactional
+    public void addPipelineToProject(Long projectId, String pipelineName, String filePath, User user) {
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
+        if (!isProjectOwner(project, user)){
+            log.warn("User is not owner of the project");
+            throw new UserNotOwnerException("User is not owner of the project");
+        }
+        Map<String, String> pipelines = project.getPipelines();
+        pipelines.put(pipelineName, filePath);
+        project.setPipelines(pipelines);
+        projectRepository.save(project);
+    }
+
+    @Override
+    @Transactional
+    public void removePipelineFromProject(Long projectId, String pipelineName, User user) {
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ProjectNotFoundException("Invalid project id."));
+        if (!isProjectOwner(project, user)){
+            log.warn("User is not owner of the project");
+            throw new UserNotOwnerException("User is not owner of the project");
+        }
+        Map<String, String> pipelines = project.getPipelines();
+        pipelines.remove(pipelineName);
+        project.setPipelines(pipelines);
+        projectRepository.save(project);
+    }
+
     private boolean isProjectOwner(Project project, User user){
         return project.getUser().getId().equals(user.getId());
     }

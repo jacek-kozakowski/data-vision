@@ -15,4 +15,5 @@ backend-java/.env
 ml-service/.env
 frontend/.env
 .env
-GEMINI.md
+
+*.jbeval

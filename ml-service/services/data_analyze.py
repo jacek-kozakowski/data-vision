@@ -1,15 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
-import os
-
 from minio import Minio
 from sklearn.preprocessing import StandardScaler
+import os
 
-minio_url = os.getenv("MINIO_URL", "localhost:9000")
-access_key = os.getenv("MINIO_ACCESS_KEY", "admin")
-secret_key = os.getenv("MINIO_SECRET_KEY", "admin12345")
-bucket_name = os.getenv("MINIO_BUCKET_NAME", "datavision-data")
+from . import BUCKET_NAME
 
 available_plots = ["scatter", "histogram", "boxplot", "line"]
 available_cleaning_methods = ["mean", "median"]
@@ -18,15 +14,9 @@ available_cleaning_methods = ["mean", "median"]
 def analyze_data_structure(file_id: str, client: Minio):
     response = None
     try:
-        response = client.get_object(bucket_name, file_id)
+        response = client.get_object(bucket_name=BUCKET_NAME, object_name=file_id)
         df = pd.read_csv(pd.io.common.BytesIO(response.read()))
         target_column = df.columns[-1]
-        target_dtype = df[target_column].dtype
-        unique_values = df[target_column].nunique()
-
-        regression_type = "linear"
-        if target_dtype == 'object' or (unique_values / len(df) < 0.1 and unique_values < 50):
-            regression_type = "logistic"
 
         result = {
             "num_columns": len(df.columns),
@@ -34,7 +24,7 @@ def analyze_data_structure(file_id: str, client: Minio):
             "columns": list(df.columns),
             "columns_types": df.dtypes.astype(str).to_dict(),
             "null_counts": df.isnull().sum().to_dict(),
-            "predicted_regression_type": regression_type
+            "predicted_task_type": detect_task_type(df[target_column])
         }
         return result
     finally:
@@ -42,10 +32,20 @@ def analyze_data_structure(file_id: str, client: Minio):
             response.close()
             response.release_conn()
 
+def detect_task_type(target_series):
+    if target_series.dtype == 'object' or target_series.dtype.name == 'category':
+        return "classification"
+
+    unique_ratio = target_series.nunique() / len(target_series)
+    if unique_ratio < 0.05 and target_series.nunique() < 20:
+        return "classification"
+
+    return "regression"
+
 def correlation_matrix(file_id: str, target: str, client: Minio):
     response = None
     try:
-        response = client.get_object(bucket_name, file_id)
+        response = client.get_object(BUCKET_NAME, file_id)
         df = pd.read_csv(pd.io.common.BytesIO(response.read()))
         if target not in df.columns:
             return {"error": f"Target '{target}' not found in data columns"}
@@ -62,7 +62,7 @@ def correlation_matrix(file_id: str, target: str, client: Minio):
 def generate_plot(file_id: str, plot_type: str, column1: str, column2: str, client: Minio):
     response = None
     try:
-        response = client.get_object(bucket_name, file_id)
+        response = client.get_object(bucket_name=BUCKET_NAME, object_name=file_id)
         df = pd.read_csv(pd.io.common.BytesIO(response.read()))
 
         if column1 not in df.columns or column2 not in df.columns:
@@ -96,7 +96,7 @@ def generate_plot(file_id: str, plot_type: str, column1: str, column2: str, clie
 
         root, _ = os.path.splitext(file_id)
         new_file_id = f"{root}_{plot_type}_{column1}_{column2}.png"
-        client.put_object(bucket_name, new_file_id, data=buf, length=buf.getbuffer().nbytes, content_type='image/png')
+        client.put_object(BUCKET_NAME, new_file_id, data=buf, length=buf.getbuffer().nbytes, content_type='image/png')
         return {"plot_file_id" : new_file_id}
     finally:
         if response:
@@ -106,7 +106,7 @@ def generate_plot(file_id: str, plot_type: str, column1: str, column2: str, clie
 def clean_scale_file(file_id: str, client: Minio, fill_na = True, fill_method = "mean",  scale = False):
     response = None
     try:
-        response = client.get_object(bucket_name, file_id)
+        response = client.get_object(BUCKET_NAME, file_id)
         df = pd.read_csv(pd.io.common.BytesIO(response.read()))
         root, ext = os.path.splitext(file_id)
         new_file_id = f"{root}_cleaned{ext}"
@@ -133,7 +133,7 @@ def clean_scale_file(file_id: str, client: Minio, fill_na = True, fill_method = 
         try:
             csv_bytes = df.to_csv(index=False).encode('utf-8')
             csv_stream = io.BytesIO(csv_bytes)
-            client.put_object(bucket_name, new_file_id, data=csv_stream, length= len(csv_bytes), content_type='application/csv')
+            client.put_object(bucket_name=BUCKET_NAME, object_name=new_file_id, data=csv_stream, length= len(csv_bytes), content_type='application/csv')
             return_data["cleaned_file_id"] = new_file_id
             return return_data
         except Exception as e:
