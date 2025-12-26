@@ -1,7 +1,7 @@
 # DataVision (IN DEVELOPMENT)
 DataVision is a comprehensive data visualization and machine learning platform. It empowers users to clean, transform, and visualize data, as well as create, train, and deploy machine learning models and pipelines without writing code.
 
-dataVision is built using a modern microservices architecture, leveraging Java Spring Boot for the backend and Python FastAPI for high-performance ML operations.
+DataVision is built using a modern microservices architecture, leveraging Java Spring Boot for the backend and Python FastAPI for high-performance ML operations.
 
 ## Architecture
 
